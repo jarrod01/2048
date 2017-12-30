@@ -1,8 +1,7 @@
 import random
+import copy as cp
 
-score = 0
 level = 0
-
 # level 决定每次随机出现的数字的概率以及最大的数字是多少
 # level 0: 随机出现2和4，概率各位50%
 # level 1：随机出现2、4、8，概率分别为45% 45% 10%
@@ -16,6 +15,7 @@ def generater_number(level=0):
         chosen_number = 2**(tmp-(10-level)+3)
     return chosen_number
 
+# 函数返回是否生成新数字
 def next_index(numbers):
     indexes = []
     for i in range(4):
@@ -23,12 +23,12 @@ def next_index(numbers):
             if numbers[i][j] == 0:
                 indexes.append((i, j))
     if not indexes:
-        return numbers
+        return False
     else:
         index = random.sample(indexes, 1)[0]
         numbers[index[0]][index[1]] = generater_number(level)
     # 根据初始数字和级别随机生成2个数字
-    return numbers
+    return True
 
 # start_number 决定初始数字是多少，
 def game_initializer(start_number=0, level=0):
@@ -148,7 +148,7 @@ def move(numbers, direction):
                 for j in range(4):
                     numbers[j][i] = line[j]
 
-    return {'nums': numbers, 'moved': moved, 'score': score}
+    return {'moved': moved, 'score': score}
 
 def print_number(numbers):
     for i in range(4):
@@ -158,28 +158,42 @@ def print_number(numbers):
         print(tmp)
     print('\n')
 
-def died_or_not(numers):
+def dead_or_not(numbers):
     directions = ['left', 'right', 'up', 'down']
-    died = True
+    dead = True
     for direction in directions:
         result = move(numbers, direction)
         if result['moved']:
-            died = False
+            dead = False
             break
-    return died
+    return dead
 
-if __name__ == '__main__':
+def play():
     score = 0
     numbers = game_initializer()
-    # print_number(numbers)
-    print(numbers)
-    died = died_or_not(numbers)
-    while not died:
+    # numbers = [[0,8,16,32],[2,8,16,2],[2,8,2,8],[2,8,16,32]]
+    print_number(numbers)
+    dead = False
+    while not dead:
+        # 此处需要主要如果用列表.copy，因为列表里包含列表，所以是创建了一个指针的列表，原数据会随着改变
+        numbers_copy = cp.deepcopy(numbers)
+        dead = dead_or_not(numbers_copy)
         direction = input('direction:  ')
+        # direction = 'r'
         result = move(numbers, direction)
-        numbers = result['nums']
         score += result['score']
-        numbers = next_index(numbers)
-        died = died_or_not(numbers)
-        # print_number(numbers)
-        print(numbers)
+        new_number_generated = next_index(numbers)
+        # if not new_number_generated:
+        print_number(numbers)
+
+def test():
+    numbers = [[2, 0, 2, 4], [0, 4, 2, 2], [2, 4, 8, 4], [4, 4, 8, 8]]
+    print_number(numbers)
+    direction = input('direction:  ')
+    result = move(numbers, direction)
+    print_number(numbers)
+    print(result['score'])
+
+if __name__ == '__main__':
+    # test()
+    play()
